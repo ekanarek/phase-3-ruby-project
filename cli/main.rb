@@ -229,7 +229,8 @@ class CLIInterface
     loop do 
       puts "\n=== Edit Receipt Menu ==="
       puts "1. Edit date"
-      puts "2. Go back to receipts view"
+      puts "2. Edit store name"
+      puts "3. Go back to receipts view"
       print "Choose an option: "
       choice = gets.chomp 
 
@@ -246,6 +247,17 @@ class CLIInterface
           show_receipt_details(id)
         end
       when '2'
+        print "Enter new store name: "
+        new_store = gets.chomp 
+        response = @api_client.update_receipt(id, { store_name: new_store })
+
+        if response["error"]
+          puts "Failed to update store: #{response["error"]}"
+        else 
+          puts "Store updated successfully!"
+          show_receipt_details(id)
+        end
+      when '3'
         response = @api_client.get_receipts 
         puts "\n=== All Receipts ==="
         display_receipts(response)

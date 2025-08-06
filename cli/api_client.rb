@@ -43,9 +43,8 @@ class APIClient
     { error: "POST /receipts failed: #{e.message}" }
   end
 
-  def update_receipt_date(id, new_date)
-    payload = { date: new_date } 
-    response = RestClient.patch(@base_url + "receipts/#{id}", payload.to_json, { content_type: :json, accept: :json })
+  def update_receipt(id, updates)
+    response = RestClient.patch(@base_url + "receipts/#{id}", updates.to_json, { content_type: :json, accept: :json })
     JSON.parse(response.body)
   rescue RestClient::Exception => e 
     { error: "PATCH /receipts/#{id} failed: #{e.message}" }
