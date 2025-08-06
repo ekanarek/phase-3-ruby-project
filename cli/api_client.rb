@@ -30,6 +30,19 @@ class APIClient
     get_request("items/#{item_id}")['receipt_id']
   end
 
+  def create_receipt(date:, store_name:, items:)
+    payload = {
+      date: date,
+      store_name: store_name,
+      items: items 
+    }
+
+    response = RestClient.post(@base_url + "receipts", payload.to_json, { content_type: :json, accept: :json} )
+    JSON.parse(response.body)
+  rescue RestClient::Exception => e 
+    { error: "POST /receipts failed: #{e.message}" }
+  end
+
   private 
 
   def get_request(endpoint, params = nil) 

@@ -13,6 +13,7 @@ class CLIInterface
     puts "\n=== Shopping Tracker CLI ==="
     puts "1. View all receipts"
     puts "2. View all purchased items"
+    puts "3. Add a new receipt"
     puts "q. Quit"
     print "\nEnter your choice: "
   end
@@ -32,6 +33,8 @@ class CLIInterface
         view_all_receipts 
       when '2'
         view_all_items 
+      when '3'
+        create_new_receipt 
       when 'q', 'quit', 'exit' 
         puts "Bye!" 
         break 
@@ -111,7 +114,7 @@ class CLIInterface
   end
 
   def total_price(items)
-    items.sum { |item| item['price'] }
+    items.sum { |item| item['price'].to_i }
   end
 
   def view_all_items 
@@ -169,6 +172,50 @@ class CLIInterface
     else 
       puts "\n=== Items Purchased at Store: #{store_name} ==="
       display_items(response)
+    end
+  end
+
+  def create_new_receipt 
+    puts "\n=== Add a New Receipt ==="
+    print "Enter shopping date (YYYY-MM-DD): "
+    date = gets.chomp 
+
+    print "Enter store name: "
+    store_name = gets.chomp 
+
+    items = []
+
+    loop do 
+      print "Enter item name (or press enter to finish): "
+      name = gets.chomp 
+      break if name.empty? && !items.empty? 
+
+      if name.empty? 
+        puts "You must add at least one item."
+        next 
+      end
+
+      price = nil 
+      loop do
+        print "Enter price in dollars (round up or down to a whole number): "
+        price_input = gets.chomp 
+        if price_input.match?(/^\d+$/)
+          price = price_input.to_i 
+          break 
+        else 
+          puts "PRICE INVALID: Please enter a whole number (no decimals, letters, or symbols)."
+        end
+      end
+      items << { name: name.capitalize, price: price }
+    end
+
+    response = @api_client.create_receipt(date: date, store_name: store_name.capitalize, items: items)
+
+    if response["error"]
+      puts "Failed to create receipt: #{response["error"]}"
+    else 
+      puts "\nReceipt created successfully!"
+      show_receipt_details(response["id"])
     end
   end
 end

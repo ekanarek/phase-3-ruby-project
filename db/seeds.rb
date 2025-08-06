@@ -24,7 +24,7 @@ store_names.each do |name|
     rand(1..5).times do 
       Item.create(
         name: Faker::Commerce.product_name,
-        price: Faker::Commerce.price,
+        price: rand(1..100),
         receipt_id: receipt.id, 
         store_id: store.id 
       )

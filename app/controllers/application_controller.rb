@@ -40,4 +40,25 @@ class ApplicationController < Sinatra::Base
     status 404 
     { error: "Item not found" }.to_json 
   end
+
+  post "/receipts" do 
+    data = JSON.parse(request.body.read) 
+    store_name = data["store_name"]
+    date = data["date"]
+    items = data["items"]
+
+    store = Store.find_or_create_by(name: store_name)
+    receipt = Receipt.create(date: date, store: store)
+
+    items.each do |item_data| 
+      Item.create(
+        name: item_data["name"],
+        price: item_data["price"],
+        receipt: receipt,
+        store: store
+      )
+    end
+
+    receipt.to_json(include: [:store, :items])
+  end
 end
