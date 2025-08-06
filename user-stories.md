@@ -30,7 +30,7 @@ As a user, I want to add a new receipt to my tracker, with information about wha
 
 Users can send a POST request to `/receipts` with the date, name of the store, and names + prices of all purchased items. This also sends POST requests to `/items` with the item information, and checks `/stores` to see if the store already exists & creating it if not.
 
-## Feature 4: Update an Existing Receipt or Store
+## Feature 4: Update an Existing Receipt
 
 ### User Story
 
@@ -38,7 +38,7 @@ As a user, I want to update the date and/or item information of an existing rece
 
 ### Details
 
-Users can send a PATCH request to `/receipts/:id` with a new date. They can also send a PATCH request to `/items/:id` to update an item's name or price. In a separate interaction, they can update the name of a store via `/stores/:id`.
+Users can send a PATCH request to `/receipts/:id` with a new date. They can also send a PATCH request to `/items/:id` to update an item's name or price, or update the name of a store via `/stores/:id`.
 
 ## Feature 5: Delete a Receipt or Item
 
