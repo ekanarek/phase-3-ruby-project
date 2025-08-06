@@ -83,4 +83,19 @@ class ApplicationController < Sinatra::Base
     status 404
     { error: "Receipt not found" }.to_json 
   end
+
+  patch "/items/:id" do 
+    data = JSON.parse(request.body.read)
+    item = Item.find(params[:id])
+
+    item.update(
+      name: data["name"].capitalize, 
+      price: data["price"].to_i 
+    )
+
+    item.to_json 
+  rescue ActiveRecord::RecordNotFound 
+    status 404
+    { error: "Item not found" }.to_json 
+  end
 end

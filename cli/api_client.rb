@@ -50,6 +50,13 @@ class APIClient
     { error: "PATCH /receipts/#{id} failed: #{e.message}" }
   end
 
+  def update_item(id, updates)
+    response = RestClient.patch(@base_url + "items/#{id}", updates.to_json, { content_type: :json, accept: :json })
+    JSON.parse(response.body)
+  rescue RestClient::Exception => e 
+    { error: "PATCH /items/#{id} failed: #{e.message}" }
+  end
+
   private 
 
   def get_request(endpoint, params = nil) 

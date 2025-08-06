@@ -230,7 +230,8 @@ class CLIInterface
       puts "\n=== Edit Receipt Menu ==="
       puts "1. Edit date"
       puts "2. Edit store name"
-      puts "3. Go back to receipts view"
+      puts "3. Edit an item"
+      puts "4. Go back to receipts view"
       print "Choose an option: "
       choice = gets.chomp 
 
@@ -258,6 +259,51 @@ class CLIInterface
           show_receipt_details(id)
         end
       when '3'
+        receipt = @api_client.get_receipt_by_id(id)
+        items = receipt["items"]
+
+        puts "\n=== Select an Item to Edit ==="
+        items.each_with_index do |item, index| 
+          puts "#{index + 1}. #{item['name']} - $#{item['price']}"
+        end
+
+        print "Enter the number of the item you'd like to edit: "
+        item_index = gets.chomp.to_i - 1
+
+        if item_index < 0 || item_index >= items.length 
+          puts "Invalid item selection."
+          next
+        end
+
+        selected_item = items[item_index]
+
+        print "Enter updated name for '#{selected_item['name']}': "
+        new_name = gets.chomp.capitalize 
+
+        new_price = nil 
+        loop do 
+          print "Enter new price in dollars (round up or down to a whole number): "
+          input = gets.chomp 
+          if input.match?(/^\d+$/)
+            new_price = input.to_i 
+            break 
+          else 
+            puts "PRICE INVALID: Please enter a whole number (no decimals, letters, or symbols)." 
+          end
+        end
+
+        response = @api_client.update_item(selected_item["id"], {
+          name: new_name,
+          price: new_price 
+        })
+
+        if response["error"]
+          puts "Failed to update item: #{response["error"]}"
+        else 
+          puts "Item updated successfully!"
+          show_receipt_details(id)
+        end
+      when '4'
         response = @api_client.get_receipts 
         puts "\n=== All Receipts ==="
         display_receipts(response)
