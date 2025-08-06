@@ -58,20 +58,26 @@ class CLIInterface
 
     loop do 
       puts "\n=== Receipt Menu ==="
-      puts "a. Filter by store"
-      puts "b. See receipt details"
-      puts "c. Back to main menu"
+      puts "1. Filter by store"
+      puts "2. See receipt details"
+      puts "3. Edit a receipt"
+      puts "4. Back to main menu"
       print "Enter your choice: "
       option = gets.chomp.downcase 
 
       case option 
-      when 'a'
+      when '1'
         filter_receipts_by_store 
-      when 'b'
+      when '2'
         print "Enter receipt ID: "
         id = gets.chomp 
         show_receipt_details(id)
-      when 'c'
+      when '3'
+        print "Enter receipt ID: "
+        id = gets.chomp 
+        show_receipt_details(id)
+        edit_receipt_menu(id)
+      when '4'
         break 
       else
         puts "Invalid choice. Please try again."
@@ -129,21 +135,21 @@ class CLIInterface
 
     loop do 
       puts "\n=== Items Menu ==="
-      puts "a. Filter by store"
-      puts "b. See an item's full receipt"
-      puts "c. Back to main menu"
+      puts "1. Filter by store"
+      puts "2. See an item's full receipt"
+      puts "3. Back to main menu"
       print "Enter your choice: "
       option = gets.chomp.downcase 
 
       case option 
-      when 'a'
+      when '1'
         filter_items_by_store
-      when 'b'
+      when '2'
         print "Enter item ID: "
         item_id = gets.chomp 
         receipt_id = @api_client.get_receipt_id_by_item(item_id)
         show_receipt_details(receipt_id)
-      when 'c'
+      when '3'
         break 
       else
         puts "Invalid choice. Please try again."
@@ -216,6 +222,37 @@ class CLIInterface
     else 
       puts "\nReceipt created successfully!"
       show_receipt_details(response["id"])
+    end
+  end
+
+  def edit_receipt_menu(id)
+    loop do 
+      puts "\n=== Edit Receipt Menu ==="
+      puts "1. Edit date"
+      puts "2. Go back to receipts view"
+      print "Choose an option: "
+      choice = gets.chomp 
+
+      case choice 
+      when '1'
+        print "Enter new date (YYYY-MM-DD): "
+        new_date = gets.chomp 
+        response = @api_client.update_receipt_date(id, new_date)
+
+        if response["error"]
+          puts "Failed to update receipt: #{response["error"]}"
+        else 
+          puts "Date updated successfully!"
+          show_receipt_details(id)
+        end
+      when '2'
+        response = @api_client.get_receipts 
+        puts "\n=== All Receipts ==="
+        display_receipts(response)
+        break
+      else 
+        puts "Invalid option."
+      end
     end
   end
 end

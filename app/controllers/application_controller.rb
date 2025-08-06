@@ -61,4 +61,16 @@ class ApplicationController < Sinatra::Base
 
     receipt.to_json(include: [:store, :items])
   end
+
+  patch "/receipts/:id" do 
+    data = JSON.parse(request.body.read) 
+    receipt = Receipt.find(params[:id])
+
+    receipt.update(date: data["date"]) if data["date"]
+
+    receipt.to_json(include: [:store, :items])
+  rescue ActiveRecord::RecordNotFound 
+    status 404
+    { error: "Receipt not found" }.to_json 
+  end
 end
