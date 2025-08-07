@@ -111,4 +111,12 @@ class ApplicationController < Sinatra::Base
 
     item.to_json 
   end
+
+  delete "/items/:id" do 
+    item = Item.find(params[:id])
+    item.destroy 
+  rescue ActiveRecord::RecordNotFound 
+    status 404 
+    { error: "Item not found" }.to_json 
+  end
 end
