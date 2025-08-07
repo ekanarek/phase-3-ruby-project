@@ -31,68 +31,83 @@ class APIClient
   end
 
   def create_receipt(date:, store_name:, items:)
-    payload = {
-      date: date,
-      store_name: store_name,
-      items: items 
-    }
-
-    response = RestClient.post(@base_url + "receipts", payload.to_json, { content_type: :json, accept: :json} )
-    JSON.parse(response.body)
-  rescue RestClient::Exception => e 
-    { error: "POST /receipts failed: #{e.message}" }
-  end
-
-  def update_receipt(id, updates)
-    response = RestClient.patch(@base_url + "receipts/#{id}", updates.to_json, { content_type: :json, accept: :json })
-    JSON.parse(response.body)
-  rescue RestClient::Exception => e 
-    { error: "PATCH /receipts/#{id} failed: #{e.message}" }
-  end
-
-  def update_item(id, updates)
-    response = RestClient.patch(@base_url + "items/#{id}", updates.to_json, { content_type: :json, accept: :json })
-    JSON.parse(response.body)
-  rescue RestClient::Exception => e 
-    { error: "PATCH /items/#{id} failed: #{e.message}" }
+    post_request("receipts", { date: date, store_name: store_name, items: items})
   end
 
   def create_item(name:, price:, receipt_id:, store_id:)
-    payload = {
-      name: name,
-      price: price,
-      receipt_id: receipt_id,
-      store_id: store_id
-    }
-
-    response = RestClient.post(@base_url + "items", payload.to_json, { content_type: :json, accept: :json} )
-    JSON.parse(response.body)
-  rescue RestClient::Exception => e 
-    { error: "POST /items failed: #{e.message}" }
+    post_request("items", { name: name, price: price, receipt_id: receipt_id, store_id: store_id })
   end
 
-  def delete_item(id)
-    RestClient.delete(@base_url + "items/#{id}")
-  rescue RestClient::Exception => e 
-    { error: "Failed to delete item: #{e.message}" }
+  def update_receipt(id, updates)
+    patch_request("receipts/#{id}", updates)
+  end
+
+  def update_item(id, updates)
+    patch_request("items/#{id}", updates)
   end
 
   def delete_receipt(id)
-    RestClient.delete(@base_url + "receipts/#{id}")
-    true 
-  rescue RestClient::Exception => e 
-    { error: "Failed to delete receipt: #{e.message}" }
+    delete_request("items/#{id}")
+  end
+
+  def delete_item(id)
+    delete_request("items/#{id}")
   end
 
   private 
 
   def get_request(endpoint, params = nil) 
-    url = @base_url + endpoint 
+    url = build_url(endpoint)
     options = params ? { params: params } : {}
 
     response = RestClient.get(url, options)
-    JSON.parse(response.body)
+    parse_response(response)
   rescue RestClient::Exception => e 
-    { error: "GET #{endpoint} failed: #{e.message}" }
+    handle_error("GET", endpoint, e)
+  end
+
+  def post_request(endpoint, payload)
+    response = RestClient.post(
+      build_url(endpoint), 
+      payload.to_json, 
+      default_headers 
+    )
+    parse_response(response)
+  rescue RestClient::Exception => e 
+    handle_error("POST", endpoint, e)
+  end
+
+  def patch_request(endpoint, payload)
+    response = RestClient.patch(
+      build_url(endpoint),
+      payload.to_json,
+      default_headers
+    )
+    parse_response(response)
+  rescue RestClient::Exception => e 
+    handle_error("PATCH", endpoint, e)
+  end
+
+  def delete_request(endpoint)
+    RestClient.delete(build_url(endpoint))
+    true 
+  rescue RestClient::Exception => e 
+    handle_error("DELETE", endpoint, e)
+  end
+
+  def build_url(endpoint)
+    "#{@base_url}#{endpoint}"
+  end 
+
+  def default_headers 
+    { content_type: :json, accept: :json }
+  end
+
+  def parse_response(response)
+    JSON.parse(response.body)
+  end
+
+  def handle_error(method, endpoint, exception)
+    { error: "#{method} /#{endpoint} failed: #{exception.message}" }
   end
 end
