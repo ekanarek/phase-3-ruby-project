@@ -57,6 +57,20 @@ class APIClient
     { error: "PATCH /items/#{id} failed: #{e.message}" }
   end
 
+  def create_item(name:, price:, receipt_id:, store_id:)
+    payload = {
+      name: name,
+      price: price,
+      receipt_id: receipt_id,
+      store_id: store_id
+    }
+
+    response = RestClient.post(@base_url + "items", payload.to_json, { content_type: :json, accept: :json} )
+    JSON.parse(response.body)
+  rescue RestClient::Exception => e 
+    { error: "POST /items failed: #{e.message}" }
+  end
+
   private 
 
   def get_request(endpoint, params = nil) 

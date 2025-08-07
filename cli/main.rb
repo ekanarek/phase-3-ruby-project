@@ -231,7 +231,8 @@ class CLIInterface
       puts "1. Edit date"
       puts "2. Edit store name"
       puts "3. Edit an item"
-      puts "4. Go back to receipts view"
+      puts "4. Add an item"
+      puts "5. Go back to receipts view"
       print "Choose an option: "
       choice = gets.chomp 
 
@@ -304,6 +305,38 @@ class CLIInterface
           show_receipt_details(id)
         end
       when '4'
+        receipt = @api_client.get_receipt_by_id(id)
+        store_id = receipt["store"]["id"]
+
+        print "Enter item name: "
+        item_name = gets.chomp.capitalize
+
+        item_price = nil 
+        loop do 
+          print "Enter new price in dollars (round up or down to a whole number): "
+          input = gets.chomp 
+          if input.match?(/^\d+$/)
+            item_price = input.to_i 
+            break 
+          else 
+            puts "PRICE INVALID: Please enter a whole number (no decimals, letters, or symbols)." 
+          end
+        end
+
+        response = @api_client.create_item(
+          name: item_name,
+          price: item_price,
+          receipt_id: id,
+          store_id: store_id
+        )
+
+        if response["error"]
+          puts "Failed to add item: #{response["error"]}"
+        else 
+          puts "Item added successfully!"
+          show_receipt_details(id)
+        end
+      when '5'
         response = @api_client.get_receipts 
         puts "\n=== All Receipts ==="
         display_receipts(response)
