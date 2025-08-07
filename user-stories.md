@@ -48,4 +48,4 @@ As a user, I want to delete a receipt or item from my tracker.
 
 ### Details
 
-Users can send DELETE requests to `/receipts:id` or `/items/:id`. If an entire receipt is deleted, so are the items associated with it. If a store no longer has any receipts associated with it, the store is also deleted.
+Users can send DELETE requests to `/receipts:id` or `/items/:id`. If an entire receipt is deleted, so are the items associated with it.

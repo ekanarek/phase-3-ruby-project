@@ -61,7 +61,8 @@ class CLIInterface
       puts "1. Filter by store"
       puts "2. See receipt details"
       puts "3. Edit a receipt"
-      puts "4. Back to main menu"
+      puts "4. Delete a receipt"
+      puts "5. Back to main menu"
       print "Enter your choice: "
       option = gets.chomp.downcase 
 
@@ -78,6 +79,11 @@ class CLIInterface
         show_receipt_details(id)
         edit_receipt_menu(id)
       when '4'
+        print "Enter receipt ID: "
+        id = gets.chomp 
+        result = @api_client.delete_receipt(id) 
+        puts "Receipt deleted successfully!" if result == true 
+      when '5'
         break 
       else
         puts "Invalid choice. Please try again."
@@ -232,7 +238,8 @@ class CLIInterface
       puts "2. Edit store name"
       puts "3. Edit an item"
       puts "4. Add an item"
-      puts "5. Go back to receipts view"
+      puts "5. Delete an item"
+      puts "6. Go back to receipts view"
       print "Choose an option: "
       choice = gets.chomp 
 
@@ -337,6 +344,38 @@ class CLIInterface
           show_receipt_details(id)
         end
       when '5'
+        receipt = @api_client.get_receipt_by_id(id)
+        items = receipt["items"]
+
+        if items.empty? 
+          puts "There are no items to delete."
+          next 
+        end
+
+        puts "\n=== Select an Item to Delete ==="
+        items.each_with_index do |item, index| 
+          puts "#{index + 1}. #{item['name']} - $#{item['price']}"
+        end
+
+        print "Enter the number of the item you'd like to delete: "
+        item_index = gets.chomp.to_i - 1
+
+        if item_index < 0 || item_index >= items.length 
+          puts "Invalid item selection."
+          next
+        end
+
+        selected_item = items[item_index]
+        begin
+          @api_client.delete_item(selected_item["id"])
+          puts "Item deleted successfully."
+          show_receipt_details(id)
+        rescue RestClient::ExceptionWithResponse => e 
+          error_response = JSON.parse(e.response) rescue nil 
+          error_message = error_response && error_response["error"] || e.message
+          puts "Failed to delete item: #{response["error"]}" 
+        end
+      when '6'
         response = @api_client.get_receipts 
         puts "\n=== All Receipts ==="
         display_receipts(response)

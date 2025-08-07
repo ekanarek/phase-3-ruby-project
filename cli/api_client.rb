@@ -71,6 +71,19 @@ class APIClient
     { error: "POST /items failed: #{e.message}" }
   end
 
+  def delete_item(id)
+    RestClient.delete(@base_url + "items/#{id}")
+  rescue RestClient::Exception => e 
+    { error: "Failed to delete item: #{e.message}" }
+  end
+
+  def delete_receipt(id)
+    RestClient.delete(@base_url + "receipts/#{id}")
+    true 
+  rescue RestClient::Exception => e 
+    { error: "Failed to delete receipt: #{e.message}" }
+  end
+
   private 
 
   def get_request(endpoint, params = nil) 
