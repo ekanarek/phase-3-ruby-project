@@ -98,4 +98,17 @@ class ApplicationController < Sinatra::Base
     status 404
     { error: "Item not found" }.to_json 
   end
+
+  post "/items" do 
+    data = JSON.parse(request.body.read)
+
+    item = Item.create(
+      name: data["name"],
+      price: data["price"],
+      receipt_id: data["receipt_id"],
+      store_id: data["store_id"]
+    )
+
+    item.to_json 
+  end
 end
