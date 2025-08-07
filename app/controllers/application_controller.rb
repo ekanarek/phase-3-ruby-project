@@ -22,25 +22,6 @@ class ApplicationController < Sinatra::Base
     { error: "Receipt not found" }.to_json 
   end
 
-  get "/items" do 
-    items = Item.all
-
-    if params[:store] 
-      store = Store.find_by(name: params[:store])
-      items = items.where(store_id: store.id) if store 
-    end
-
-    items.to_json(include: [:store, :receipt])
-  end
-
-  get "/items/:id" do 
-    item = Item.find(params[:id])
-    item.to_json 
-  rescue ActiveRecord::RecordNotFound 
-    status 404 
-    { error: "Item not found" }.to_json 
-  end
-
   post "/receipts" do 
     data = JSON.parse(request.body.read) 
     store_name = data["store_name"]
@@ -84,18 +65,30 @@ class ApplicationController < Sinatra::Base
     { error: "Receipt not found" }.to_json 
   end
 
-  patch "/items/:id" do 
-    data = JSON.parse(request.body.read)
+  delete "/receipts/:id" do 
+    receipt = Receipt.find(params[:id])
+    receipt.destroy 
+  rescue ActiveRecord::RecordNotFound 
+    status 404 
+    { error: "Item not found" }.to_json 
+  end
+
+  get "/items" do 
+    items = Item.all
+
+    if params[:store] 
+      store = Store.find_by(name: params[:store])
+      items = items.where(store_id: store.id) if store 
+    end
+
+    items.to_json(include: [:store, :receipt])
+  end
+
+  get "/items/:id" do 
     item = Item.find(params[:id])
-
-    item.update(
-      name: data["name"].capitalize, 
-      price: data["price"].to_i 
-    )
-
     item.to_json 
   rescue ActiveRecord::RecordNotFound 
-    status 404
+    status 404 
     { error: "Item not found" }.to_json 
   end
 
@@ -112,17 +105,24 @@ class ApplicationController < Sinatra::Base
     item.to_json 
   end
 
-  delete "/items/:id" do 
+  patch "/items/:id" do 
+    data = JSON.parse(request.body.read)
     item = Item.find(params[:id])
-    item.destroy 
+
+    item.update(
+      name: data["name"].capitalize, 
+      price: data["price"].to_i 
+    )
+
+    item.to_json 
   rescue ActiveRecord::RecordNotFound 
-    status 404 
+    status 404
     { error: "Item not found" }.to_json 
   end
 
-  delete "/receipts/:id" do 
-    receipt = Receipt.find(params[:id])
-    receipt.destroy 
+  delete "/items/:id" do 
+    item = Item.find(params[:id])
+    item.destroy 
   rescue ActiveRecord::RecordNotFound 
     status 404 
     { error: "Item not found" }.to_json 
