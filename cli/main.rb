@@ -61,7 +61,8 @@ class CLIInterface
       puts "1. Filter by store"
       puts "2. See receipt details"
       puts "3. Edit a receipt"
-      puts "4. Back to main menu"
+      puts "4. Delete a receipt"
+      puts "5. Back to main menu"
       print "Enter your choice: "
       option = gets.chomp.downcase 
 
@@ -78,6 +79,11 @@ class CLIInterface
         show_receipt_details(id)
         edit_receipt_menu(id)
       when '4'
+        print "Enter receipt ID: "
+        id = gets.chomp 
+        result = @api_client.delete_receipt(id) 
+        puts "Receipt deleted successfully!" if result == true 
+      when '5'
         break 
       else
         puts "Invalid choice. Please try again."

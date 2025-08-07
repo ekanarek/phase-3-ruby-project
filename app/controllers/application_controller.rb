@@ -119,4 +119,12 @@ class ApplicationController < Sinatra::Base
     status 404 
     { error: "Item not found" }.to_json 
   end
+
+  delete "/receipts/:id" do 
+    receipt = Receipt.find(params[:id])
+    receipt.destroy 
+  rescue ActiveRecord::RecordNotFound 
+    status 404 
+    { error: "Item not found" }.to_json 
+  end
 end
