@@ -112,145 +112,116 @@ class ReceiptsMenu
       choice = gets.chomp 
 
       case choice 
-      when '1'
-        print "Enter new date (YYYY-MM-DD): "
-        new_date = gets.chomp 
-        response = @api_client.update_receipt(id, { date: new_date })
-
-        if response["error"]
-          puts "Failed to update receipt: #{response["error"]}"
-        else 
-          puts "Date updated successfully!"
-          show_receipt_details(id)
-        end
-      when '2'
-        print "Enter new store name: "
-        new_store = gets.chomp 
-        response = @api_client.update_receipt(id, { store_name: new_store })
-
-        if response["error"]
-          puts "Failed to update store: #{response["error"]}"
-        else 
-          puts "Store updated successfully!"
-          show_receipt_details(id)
-        end
-      when '3'
-        receipt = @api_client.get_receipt_by_id(id)
-        items = receipt["items"]
-
-        puts "\n=== Select an Item to Edit ==="
-        items.each_with_index do |item, index| 
-          puts "#{index + 1}. #{item['name']} - $#{item['price']}"
-        end
-
-        print "Enter the number of the item you'd like to edit: "
-        item_index = gets.chomp.to_i - 1
-
-        if item_index < 0 || item_index >= items.length 
-          puts "Invalid item selection."
-          next
-        end
-
-        selected_item = items[item_index]
-
-        print "Enter updated name for '#{selected_item['name']}': "
-        new_name = gets.chomp.capitalize 
-
-        new_price = nil 
-        loop do 
-          print "Enter new price in dollars (round up or down to a whole number): "
-          input = gets.chomp 
-          if input.match?(/^\d+$/)
-            new_price = input.to_i 
-            break 
-          else 
-            puts "PRICE INVALID: Please enter a whole number (no decimals, letters, or symbols)." 
-          end
-        end
-
-        response = @api_client.update_item(selected_item["id"], {
-          name: new_name,
-          price: new_price 
-        })
-
-        if response["error"]
-          puts "Failed to update item: #{response["error"]}"
-        else 
-          puts "Item updated successfully!"
-          show_receipt_details(id)
-        end
-      when '4'
-        receipt = @api_client.get_receipt_by_id(id)
-        store_id = receipt["store"]["id"]
-
-        print "Enter item name: "
-        item_name = gets.chomp.capitalize
-
-        item_price = nil 
-        loop do 
-          print "Enter new price in dollars (round up or down to a whole number): "
-          input = gets.chomp 
-          if input.match?(/^\d+$/)
-            item_price = input.to_i 
-            break 
-          else 
-            puts "PRICE INVALID: Please enter a whole number (no decimals, letters, or symbols)." 
-          end
-        end
-
-        response = @api_client.create_item(
-          name: item_name,
-          price: item_price,
-          receipt_id: id,
-          store_id: store_id
-        )
-
-        if response["error"]
-          puts "Failed to add item: #{response["error"]}"
-        else 
-          puts "Item added successfully!"
-          show_receipt_details(id)
-        end
-      when '5'
-        receipt = @api_client.get_receipt_by_id(id)
-        items = receipt["items"]
-
-        if items.empty? 
-          puts "There are no items to delete."
-          next 
-        end
-
-        puts "\n=== Select an Item to Delete ==="
-        items.each_with_index do |item, index| 
-          puts "#{index + 1}. #{item['name']} - $#{item['price']}"
-        end
-
-        print "Enter the number of the item you'd like to delete: "
-        item_index = gets.chomp.to_i - 1
-
-        if item_index < 0 || item_index >= items.length 
-          puts "Invalid item selection."
-          next
-        end
-
-        selected_item = items[item_index]
-        begin
-          @api_client.delete_item(selected_item["id"])
-          puts "Item deleted successfully."
-          show_receipt_details(id)
-        rescue RestClient::ExceptionWithResponse => e 
-          error_response = JSON.parse(e.response) rescue nil 
-          error_message = error_response && error_response["error"] || e.message
-          puts "Failed to delete item: #{response["error"]}" 
-        end
-      when '6'
-        response = @api_client.get_receipts 
+      when '1' then edit_receipt_date(id)
+      when '2' then edit_receipt_store(id) 
+      when '3' then edit_item(id)
+      when '4' then add_item(id) 
+      when '5' then delete_item(id)
+      when '6' 
         puts "\n=== All Receipts ==="
-        display_receipts(response)
-        break
+        display_receipts(@api_client.get_receipts) 
+        break 
       else 
         puts "Invalid option."
       end
+    end
+  end
+
+  private 
+
+  def edit_receipt_date(id) 
+    new_date = prompt("Enter new date (YYYY-MM-DD): ")
+    response = @api_client.update_receipt(id, { date: new_date })
+
+    if response["error"]
+      puts "Failed to update receipt: #{response["error"]}"
+    else 
+      puts "Date updated successfully!"
+      show_receipt_details(id) 
+    end
+  end
+
+  def edit_receipt_store(id) 
+    new_store = prompt("Enter store name: ")
+    response = @api_client.update_receipt(id, { store_name: new_store })
+
+    if response["error"] 
+      puts "Failed to update store: #{response["error"]}"
+    else 
+      puts "Store updated successfully!" 
+      show_receipt_details(id)
+    end
+  end
+
+  def edit_item(receipt_id)
+    receipt = @api_client.get_receipt_by_id(receipt_id)
+    items = receipt["items"] 
+
+    puts "\n=== Select an Item to Edit ==="
+    items.each_with_index { |item, index| puts "#{index + 1}. #{item['name']} - $#{item['price']}" }
+
+    index = get_valid_integer("Enter the number of the item to edit: ") - 1 
+    return puts "Invalid item selection." unless items[index] 
+
+    item = items[index]
+    new_name = prompt("Enter updated name for '#{item['name']}': ").capitalize 
+    new_price = get_valid_integer("Enter new price in dollars: ")
+
+    response = @api_client.update_item(item["id"], { name: new_name, price: new_price })
+
+    if response["error"]
+      puts "Failed to update item: #{response["error"]}"
+    else 
+      puts "Item updated successfully!"
+      show_receipt_details(receipt_id)
+    end
+  end
+
+  def add_item(receipt_id)
+    receipt = @api_client.get_receipt_by_id(receipt_id)
+    store_id = receipt["store"]["id"]
+
+    item_name = prompt("Enter item name: ").capitalize
+    item_price = get_valid_integer("Enter item price in dollars: ")
+
+    response = @api_client.create_item(
+      name: item_name,
+      price: item_price,
+      receipt_id: receipt_id,
+      store_id: store_id
+    )
+
+    if response["error"]
+      puts "Failed to add item: #{response["error"]}"
+    else 
+      puts "Item added successfully!"
+      show_receipt_details(receipt_id)
+    end
+  end
+
+  def delete_item(receipt_id)
+    receipt = @api_client.get_receipt_by_id(receipt_id)
+    items = receipt["items"]
+
+    if items.empty? 
+      puts "There are no items to delete."
+    end
+
+    puts "\n=== Select an Item to Delete ==="
+    items.each_with_index { |item, index| puts "#{index + 1}. #{item['name']} - $#{item['price']}" } 
+
+    index = get_valid_integer("Enter the number of the item you'd like to delete: ") - 1
+    return puts "Invalid item selection." unless items[index]
+
+    item = items[index]
+    begin
+      @api_client.delete_item(item["id"])
+      puts "Item deleted successfully."
+      show_receipt_details(receipt_id)
+    rescue RestClient::ExceptionWithResponse => e 
+      error_response = JSON.parse(e.response) rescue nil 
+      error_message = error_response && error_response["error"] || e.message
+      puts "Failed to delete item: #{response["error"]}" 
     end
   end
 end
